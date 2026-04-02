@@ -4,13 +4,12 @@ import {
 } from '@nestjs/common';
 import { BranchesService, CreateBranchDto } from './branches.service';
 import { FirebaseAuthGuard, PermissionsGuard } from '../common/guards/index';
-import { TenantContextInterceptor } from '../common/interceptors/index';
 import { CurrentUser, Permissions } from '../common/decorators/index';
 import { TenantContext } from '../common/types/tenant-context.type';
 
 @Controller('branches')
 @UseGuards(FirebaseAuthGuard, PermissionsGuard)
-@UseInterceptors(TenantContextInterceptor)
+
 export class BranchesController {
   constructor(private readonly service: BranchesService) {}
 

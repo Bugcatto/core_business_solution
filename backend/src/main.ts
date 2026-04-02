@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ZodValidationPipe } from './common/pipes/zod-validation.pipe';
-import { ResponseTransformInterceptor } from './common/interceptors/response-transform.interceptor';
+import { ResponseTransformInterceptor } from './common/interceptors/index';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

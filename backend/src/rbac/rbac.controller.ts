@@ -4,20 +4,21 @@ import {
 } from '@nestjs/common';
 import { RbacService } from './rbac.service';
 import { FirebaseAuthGuard, PermissionsGuard } from '../common/guards/index';
-import { TenantContextInterceptor } from '../common/interceptors/index';
 import { CurrentUser, Permissions } from '../common/decorators/index';
 import { TenantContext } from '../common/types/tenant-context.type';
 
 @Controller('rbac')
 @UseGuards(FirebaseAuthGuard, PermissionsGuard)
-@UseInterceptors(TenantContextInterceptor)
+
 export class RbacController {
   constructor(private readonly service: RbacService) {}
 
+  // users.invite is included so Managers can load roles when inviting staff.
+  // The Owner role is excluded from results — it must not be assignable via invite.
   @Get('roles')
-  @Permissions('roles.manage')
+  @Permissions('roles.manage', 'users.invite')
   getRoles(@CurrentUser() ctx: TenantContext) {
-    return this.service.getRoles(ctx);
+    return this.service.getRolesForInvite(ctx);
   }
 
   @Post('roles')

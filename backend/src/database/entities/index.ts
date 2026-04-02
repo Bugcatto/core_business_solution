@@ -1,4 +1,6 @@
+export { PlatformOwner } from './platform-owner.entity';
 export { Business } from './business.entity';
+export type { BusinessType, BusinessStatus, SubscriptionPlan } from './business.entity';
 export { User } from './user.entity';
 export {
   Branch,
@@ -13,3 +15,18 @@ export {
   OnboardingProgress,
   Setting,
 } from './employee.entity';
+export type { OnboardingStep } from './employee.entity';
+
+// Phase 2 — catalog
+export { Category, Item, ItemVariant, PosTerminal } from './catalog.entity';
+
+// Phase 2 — transactions
+export { Transaction, TransactionLine, Payment } from './transaction.entity';
+
+// Phase 2/3 — inventory
+export {
+  Inventory,
+  InventoryMovement,
+  InventoryAdjustment,
+  InventoryTransfer,
+} from './inventory.entity';

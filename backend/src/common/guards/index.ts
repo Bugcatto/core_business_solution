@@ -3,7 +3,6 @@ import {
   UnauthorizedException, ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import * as admin from 'firebase-admin';
 import { AuthenticatedRequest } from '../types/tenant-context.type';
 
 // ─── FirebaseAuthGuard ────────────────────────────────────────────────────────
@@ -14,30 +13,17 @@ import { AuthenticatedRequest } from '../types/tenant-context.type';
 export class FirebaseAuthGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
-  async canActivate(ctx: ExecutionContext): Promise<boolean> {
+  canActivate(ctx: ExecutionContext): boolean {
     const isPublic = this.reflector.getAllAndOverride<boolean>('isPublic', [
       ctx.getHandler(),
       ctx.getClass(),
     ]);
     if (isPublic) return true;
 
+    // Token was already verified and req.firebaseUid set by TenantMiddleware
     const req = ctx.switchToHttp().getRequest<AuthenticatedRequest>();
-    const token = this.extractToken(req);
-    if (!token) throw new UnauthorizedException('Missing auth token');
-
-    try {
-      const decoded = await admin.auth().verifyIdToken(token);
-      req.firebaseUid = decoded.uid;
-      return true;
-    } catch {
-      throw new UnauthorizedException('Invalid or expired token');
-    }
-  }
-
-  private extractToken(req: any): string | null {
-    const auth = req.headers?.authorization as string | undefined;
-    if (!auth?.startsWith('Bearer ')) return null;
-    return auth.slice(7);
+    if (!req.firebaseUid) throw new UnauthorizedException('Missing or invalid auth token');
+    return true;
   }
 }
 
@@ -54,13 +40,25 @@ export class PermissionsGuard implements CanActivate {
       ctx.getHandler(),
       ctx.getClass(),
     ]);
-    if (!required?.length) return true;
 
     const req = ctx.switchToHttp().getRequest<AuthenticatedRequest>();
+
+    // If this route requires permissions but tenant context wasn't resolved
+    // (business lookup failed in TenantMiddleware), reject cleanly instead of
+    // crashing with a TypeError that becomes a 500.
+    if (required?.length && !req.tenantContext) {
+      throw new UnauthorizedException('Tenant context not resolved — please re-authenticate');
+    }
+
+    if (!required?.length) return true;
+
     const { isOwner, permissions } = req.tenantContext;
 
     if (isOwner) return true;
-    if (required.every((p) => permissions.includes(p))) return true;
+    // OR logic: user needs any ONE of the listed permissions (not all of them).
+    // This lets routes like @Permissions('items.view', 'pos.create') pass for
+    // cashiers who have pos.create but not items.view.
+    if (required.some((p) => permissions.includes(p))) return true;
 
     throw new ForbiddenException(
       `Required permissions: ${required.join(', ')}`,
@@ -81,7 +79,7 @@ export class BranchAccessGuard implements CanActivate {
     if (isOwner) return true;
 
     const requestedBranchId =
-      req.headers['x-branch-id'] ?? (req as any).params?.branchId;
+      (req.headers as any)['x-branch-id'] ?? (req as any).params?.branchId;
 
     if (!requestedBranchId) return true; // no branch context required on this route
     if (branchId === requestedBranchId) return true;

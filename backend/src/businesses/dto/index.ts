@@ -9,6 +9,7 @@ export const CreateBusinessSchema = z.object({
   language:     z.enum(['en', 'my']).default('en'),
   email:        z.string().email(),
   phone:        z.string().optional(),
+  displayName:  z.string().optional(),   // platform owner display name
 });
 export type CreateBusinessDto = z.infer<typeof CreateBusinessSchema>;
 
@@ -30,6 +31,6 @@ export type SelectTypeDto = z.infer<typeof SelectTypeSchema>;
 
 // ─── Plan selection (onboarding step 4) ──────────────────────────────────────
 export const SelectPlanSchema = z.object({
-  plan: z.enum(['trial', 'starter', 'growth', 'enterprise']),
+  plan: z.enum(['free', 'starter', 'growth', 'enterprise']),
 });
 export type SelectPlanDto = z.infer<typeof SelectPlanSchema>;

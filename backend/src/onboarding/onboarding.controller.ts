@@ -4,7 +4,6 @@ import {
 } from '@nestjs/common';
 import { OnboardingService } from './onboarding.service';
 import { FirebaseAuthGuard } from '../common/guards/index';
-import { TenantContextInterceptor } from '../common/interceptors/index';
 import { CurrentUser, FirebaseUid, Public } from '../common/decorators/index';
 import { TenantContext } from '../common/types/tenant-context.type';
 import { CreateBusinessDto, SelectTypeDto, SelectPlanDto } from '../businesses/dto/index';
@@ -16,7 +15,7 @@ export class OnboardingController {
 
   // ── Status (resumable — call on every app load) ────────────────────────────
   @Get('status')
-  @UseInterceptors(TenantContextInterceptor)
+  
   getStatus(@CurrentUser() ctx: TenantContext) {
     return this.service.getStatus(ctx.businessId);
   }
@@ -33,7 +32,7 @@ export class OnboardingController {
 
   // ── Step 3: Select type ────────────────────────────────────────────────────
   @Post('type')
-  @UseInterceptors(TenantContextInterceptor)
+  
   selectType(
     @CurrentUser() ctx: TenantContext,
     @Body() dto: SelectTypeDto,
@@ -43,7 +42,7 @@ export class OnboardingController {
 
   // ── Step 4+5: Select plan → auto-provision ─────────────────────────────────
   @Post('plan')
-  @UseInterceptors(TenantContextInterceptor)
+  
   async selectPlan(
     @CurrentUser() ctx: TenantContext,
     @Body() dto: SelectPlanDto,
@@ -54,7 +53,7 @@ export class OnboardingController {
 
   // ── Step 6: Wizard checklist ───────────────────────────────────────────────
   @Patch('wizard/:step')
-  @UseInterceptors(TenantContextInterceptor)
+  
   markWizardStep(
     @CurrentUser() ctx: TenantContext,
     @Param('step') step: string,
@@ -64,7 +63,7 @@ export class OnboardingController {
 
   // ── Save partial form state ────────────────────────────────────────────────
   @Post('draft')
-  @UseInterceptors(TenantContextInterceptor)
+  
   saveDraft(
     @CurrentUser() ctx: TenantContext,
     @Body() body: Record<string, any>,

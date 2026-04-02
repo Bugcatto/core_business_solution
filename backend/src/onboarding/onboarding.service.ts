@@ -1,12 +1,14 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, ConflictException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Business, BusinessType, SubscriptionPlan } from '../database/entities/index';
 import { Branch, UserBranch, Role, UserRole } from '../database/entities/index';
 import { User } from '../database/entities/index';
 import { OnboardingProgress, OnboardingStep, Setting } from '../database/entities/index';
+import { PosTerminal } from '../database/entities/index';
 import { RbacSeeder } from '../rbac/rbac.seeder';
 import { BusinessesService } from '../businesses/businesses.service';
+import { PlatformService } from '../platform/platform.service';
 import { CreateBusinessDto } from '../businesses/dto/index';
 
 // Default settings provisioned for every new business
@@ -27,50 +29,65 @@ export class OnboardingService {
     private readonly dataSource: DataSource,
     private readonly rbacSeeder: RbacSeeder,
     private readonly businessesService: BusinessesService,
+    private readonly platformService: PlatformService,
     @InjectRepository(OnboardingProgress)
     private readonly progressRepo: Repository<OnboardingProgress>,
   ) {}
 
   // ── Step 1+2: Create business + owner user ──────────────────────────────────
   async createBusiness(firebaseUid: string, dto: CreateBusinessDto) {
-    return this.dataSource.transaction(async (em) => {
-      const slug = await this.businessesService.generateSlug(dto.name);
-
-      const business = em.create(Business, {
-        name:            dto.name,
-        slug,
-        businessType:    dto.businessType,
-        defaultLanguage: dto.language ?? 'en',
-        country:         dto.country,
-        currency:        dto.currency,
-        subscriptionPlan:'trial' as SubscriptionPlan,
-        status:          'onboarding',
-      });
-      await em.save(business);
-
-      const user = em.create(User, {
-        businessId:   business.id,
+    try {
+      // Ensure a PlatformOwner record exists for this Firebase account.
+      // Idempotent — safe to call on every onboarding attempt.
+      const platformOwner = await this.platformService.findOrCreate(
         firebaseUid,
-        email:        dto.email,
-        phone:        dto.phone,
-        createdBy:    null,        // self-registered
-        inviteStatus: 'active',
-        isActive:     true,
+        dto.email,
+        dto.displayName,
+      );
+
+      return await this.dataSource.transaction(async (em) => {
+        const slug = await this.businessesService.generateSlug(dto.name);
+
+        const business = em.getRepository(Business).create({
+          name:             dto.name,
+          slug,
+          businessType:     dto.businessType,
+          defaultLanguage:  dto.language ?? 'en',
+          country:          dto.country,
+          currency:         dto.currency,
+          subscriptionPlan: 'free' as SubscriptionPlan,
+          status:           'onboarding',
+          platformOwnerId:  platformOwner.id,
+        });
+        await em.save(business);
+
+        const user = em.getRepository(User).create({
+          businessId:   business.id,
+          firebaseUid,
+          email:        dto.email,
+          createdBy:    null,        // self-registered
+          inviteStatus: 'active',
+          isActive:     true,
+        });
+        await em.save(user);
+
+        // Link owner to business
+        business.ownerUserId = user.id;
+        await em.save(business);
+
+        // Init onboarding progress tracker
+        await em.save(em.getRepository(OnboardingProgress).create({
+          businessId:  business.id,
+          currentStep: 'business_created' as OnboardingStep,
+        }));
+
+        return { businessId: business.id, userId: user.id };
       });
-      await em.save(user);
-
-      // Link owner to business
-      business.ownerUserId = user.id;
-      await em.save(business);
-
-      // Init onboarding progress tracker
-      await em.save(em.create(OnboardingProgress, {
-        businessId:  business.id,
-        currentStep: 'business_created' as OnboardingStep,
-      }));
-
-      return { businessId: business.id, userId: user.id };
-    });
+    } catch (err: any) {
+      // Re-throw NestJS HttpExceptions as-is
+      if (err?.status) throw err;
+      throw new InternalServerErrorException('Failed to create business. Please try again.');
+    }
   }
 
   // ── Step 3: Select business type ────────────────────────────────────────────
@@ -97,10 +114,11 @@ export class OnboardingService {
     }
 
     return this.dataSource.transaction(async (em) => {
-      const business = await em.findOneOrFail(Business, { where: { id: businessId } });
+      const business = await em.findOne(Business, { where: { id: businessId } });
+      if (!business) throw new NotFoundException(`Business ${businessId} not found`);
 
       // 1. Default branch
-      const branch = await em.save(em.create(Branch, {
+      const branch = await em.save(em.getRepository(Branch).create({
         businessId: business.id,
         name:       'Main Branch',
         timezone:   'UTC',
@@ -111,24 +129,32 @@ export class OnboardingService {
       await this.rbacSeeder.seedForBusiness(em, business.id);
 
       // 3. Assign owner → Owner role → default branch
-      const ownerRole = await em.findOneOrFail(Role, {
+      const ownerRole = await em.findOne(Role, {
         where: { businessId: business.id, name: 'Owner' },
       });
+      if (!ownerRole) throw new InternalServerErrorException('Owner role not seeded — provisioning failed');
 
-      await em.save(em.create(UserRole, {
+      await em.save(em.getRepository(UserRole).create({
         userId:   business.ownerUserId,
         roleId:   ownerRole.id,
         branchId: branch.id,
       }));
 
-      await em.save(em.create(UserBranch, {
+      await em.save(em.getRepository(UserBranch).create({
         userId:   business.ownerUserId,
         branchId: branch.id,
       }));
 
+      // 3b. Default POS terminal for the branch
+      const terminal = await em.save(em.getRepository(PosTerminal).create({
+        businessId: business.id,
+        branchId:   branch.id,
+        name:       'Terminal 1',
+      }));
+
       // 4. Default settings
       const settings = DEFAULT_SETTINGS.map((s) =>
-        em.create(Setting, { businessId: business.id, branchId: null, ...s }),
+        em.getRepository(Setting).create({ businessId: business.id, branchId: null, ...s }),
       );
       await em.save(settings);
 
@@ -139,7 +165,7 @@ export class OnboardingService {
       // 6. Advance onboarding step
       await em.update(OnboardingProgress, { businessId }, { currentStep: 'provisioned' });
 
-      return { provisioned: true, defaultBranchId: branch.id };
+      return { provisioned: true, defaultBranchId: branch.id, defaultTerminalId: terminal.id };
     });
   }
 

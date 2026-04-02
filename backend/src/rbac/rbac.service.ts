@@ -21,6 +21,16 @@ export class RbacService {
     return this.rolesRepo.find({ where: { businessId: ctx.businessId } });
   }
 
+  // Returns all roles except Owner — used by invite dialog (requires only users.invite)
+  getRolesForInvite(ctx: TenantContext): Promise<Role[]> {
+    return this.rolesRepo
+      .createQueryBuilder('r')
+      .where('r.businessId = :bid', { bid: ctx.businessId })
+      .andWhere('r.name != :owner', { owner: 'Owner' })
+      .orderBy('r.name', 'ASC')
+      .getMany();
+  }
+
   async createRole(ctx: TenantContext, name: string, description?: string): Promise<Role> {
     const role = this.rolesRepo.create({
       businessId: ctx.businessId,

@@ -1,15 +1,18 @@
-// ─── common/types/tenant-context.type.ts ─────────────────────────────────────
+// ─── common/types/tenant-context.type.ts ──────────────────────────────────────
+
 export interface TenantContext {
-  userId: string;
-  businessId: string;
-  branchId: string;
-  firebaseUid: string;
-  permissions: string[];
-  isOwner: boolean;
-  businessType: string;
+  platformOwnerId: string;   // id of the PlatformOwner account
+  userId:          string;   // id of the User record within the business
+  businessId:      string;
+  branchId:        string;
+  firebaseUid:     string;
+  permissions:     string[];
+  isOwner:         boolean;
+  businessType:    string;
+  plan:            string;
 }
 
 export interface AuthenticatedRequest extends Request {
-  firebaseUid: string;
-  tenantContext: TenantContext;
+  firebaseUid:    string;
+  tenantContext:  TenantContext;
 }

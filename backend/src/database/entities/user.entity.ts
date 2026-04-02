@@ -28,16 +28,16 @@ export class User {
   displayName: string;
 
   // null = self-registered (owner). uuid = invited by another user
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   createdBy: string | null;
 
   @Column({ type: 'varchar', length: 20, default: 'active' })
   inviteStatus: InviteStatus;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   inviteToken: string | null;   // cleared once accepted
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   inviteExpiresAt: Date | null;
 
   @Column({ default: 'en' })

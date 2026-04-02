@@ -64,7 +64,7 @@ create a business, get provisioned, and log in.
 
 ---
 
-## Phase 2 — POS Core
+## Phase 2 — POS Core 🔨
 **Goal:** A cashier can open a session, ring up items, accept payment, and print a receipt.
 
 ### Backend modules

@@ -4,8 +4,8 @@ import {
 } from 'typeorm';
 
 export type BusinessType = 'retail' | 'restaurant' | 'school' | 'pharmacy' | 'service';
-export type BusinessStatus = 'onboarding' | 'active' | 'suspended' | 'cancelled';
-export type SubscriptionPlan = 'trial' | 'starter' | 'growth' | 'enterprise';
+export type BusinessStatus = 'draft' | 'onboarding' | 'active' | 'paused' | 'suspended' | 'archived' | 'closed';
+export type SubscriptionPlan = 'free' | 'starter' | 'growth' | 'enterprise';
 
 @Entity('businesses')
 export class Business {
@@ -21,14 +21,18 @@ export class Business {
   @Column({ type: 'varchar', length: 20 })
   businessType: BusinessType;
 
-  @Column({ type: 'varchar', length: 20, default: 'trial' })
+  @Column({ type: 'varchar', length: 20, default: 'free' })
   subscriptionPlan: SubscriptionPlan;
 
   @Column({ type: 'varchar', length: 20, default: 'onboarding' })
   status: BusinessStatus;
 
+  // FK to platform_owners — the account that owns this business
   @Column({ nullable: true })
-  ownerUserId: string;  // set after user is created in onboarding
+  platformOwnerId: string;
+
+  @Column({ nullable: true })
+  ownerUserId: string;  // FK to users — the staff record with Owner role in this business
 
   @Column({ default: 'en' })
   defaultLanguage: string;

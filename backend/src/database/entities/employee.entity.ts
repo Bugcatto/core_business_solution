@@ -18,7 +18,7 @@ export class Employee {
   branchId: string;
 
   // Nullable — an employee doesn't require a system login account
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   userId: string | null;
 
   @Column()
@@ -105,7 +105,7 @@ export class Setting {
   businessId: string;
 
   // null = business-wide, uuid = branch-specific override
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   branchId: string | null;
 
   @Column()

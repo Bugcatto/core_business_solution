@@ -132,7 +132,7 @@ See [PHASES.md](./PHASES.md) for full phase-by-phase checklist.
 |-------|-------------|--------|
 | 0 | Planning & architecture | ✅ Done |
 | 1 | Foundation (auth, onboarding, RBAC) | 🔨 In progress |
-| 2 | POS core | ⬜ Not started |
+| 2 | POS core (catalog, transactions, inventory) | 🔨 In progress |
 | 3 | Inventory + contacts + reports | ⬜ Not started |
 | 4 | Industry support (retail + restaurant) | ⬜ Not started |
 | 5 | Mobile app (Flutter) | ⬜ Not started |

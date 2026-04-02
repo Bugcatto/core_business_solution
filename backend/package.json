@@ -13,9 +13,23 @@
     "test:watch": "jest --watch",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "typeorm": "typeorm-ts-node-commonjs",
-    "migration:generate": "npm run typeorm -- migration:generate",
-    "migration:run": "npm run typeorm -- migration:run",
-    "migration:revert": "npm run typeorm -- migration:revert"
+    "migration:generate": "npm run typeorm -- migration:generate -d src/database/data-source.ts",
+    "migration:run": "npm run typeorm -- migration:run -d src/database/data-source.ts",
+    "migration:revert": "npm run typeorm -- migration:revert -d src/database/data-source.ts",
+    "test:integration": "NODE_ENV=test jest --testPathPattern=\"checkout.integration.spec\" --runInBand --forceExit",
+    "test:e2e:checkout": "NODE_ENV=test jest --testPathPattern=\"checkout.e2e.spec\" --runInBand --forceExit"
+  },
+  "jest": {
+    "moduleFileExtensions": ["js", "json", "ts"],
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverageFrom": ["**/*.(t|j)s"],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node",
+    "testTimeout": 60000
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -38,8 +52,11 @@
     "@nestjs/testing": "^10.0.0",
     "@types/express": "^4.17.17",
     "@types/jest": "^29.5.0",
+    "@types/jsonwebtoken": "^9.0.2",
     "@types/node": "^20.3.1",
+    "@types/supertest": "^2.0.12",
     "jest": "^29.5.0",
+    "jsonwebtoken": "^9.0.2",
     "supertest": "^6.3.3",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",

@@ -23,7 +23,14 @@ export class TenantContextInterceptor implements NestInterceptor {
     // @Public() routes have no firebaseUid — skip context resolution
     if (!req.firebaseUid) return next.handle();
 
-    const user     = await this.usersService.findByFirebaseUid(req.firebaseUid);
+    // User may not exist yet (e.g. POST /onboarding/business — first call after Firebase signup)
+    let user: Awaited<ReturnType<typeof this.usersService.findByFirebaseUid>>;
+    try {
+      user = await this.usersService.findByFirebaseUid(req.firebaseUid);
+    } catch {
+      return next.handle();
+    }
+
     const business = await this.businessesService.findById(user.businessId);
 
     const branchId =
@@ -33,13 +40,15 @@ export class TenantContextInterceptor implements NestInterceptor {
     const permissions = await this.usersService.getPermissions(user.id, branchId);
 
     req.tenantContext = {
-      userId:       user.id,
-      businessId:   user.businessId,
+      platformOwnerId: '',   // not resolved in interceptor — TenantMiddleware handles this
+      userId:          user.id,
+      businessId:      user.businessId,
       branchId,
-      firebaseUid:  req.firebaseUid,
+      firebaseUid:     req.firebaseUid,
       permissions,
-      isOwner:      business.ownerUserId === user.id,
-      businessType: business.businessType,
+      isOwner:         business.ownerUserId === user.id,
+      businessType:    business.businessType,
+      plan:            business.subscriptionPlan,
     } satisfies TenantContext;
 
     return next.handle();

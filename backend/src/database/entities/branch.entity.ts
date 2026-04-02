@@ -110,7 +110,7 @@ export class UserRole {
   roleId: string;
 
   // Role can be scoped to a specific branch, or null = all branches
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   branchId: string | null;
 
   @CreateDateColumn()

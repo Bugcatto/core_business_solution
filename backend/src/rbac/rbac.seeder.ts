@@ -62,7 +62,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
   SysAdmin: [
     'settings.manage', 'users.manage', 'branches.manage',
     'roles.manage', 'reports.view', 'reports.export',
-    'subscription.manage', 'items.manage', 'hr.manage',
+    'subscription.manage', 'items.view', 'items.manage', 'hr.manage',
   ],
   Manager: [
     'pos.create', 'pos.void', 'pos.discount', 'pos.refund',

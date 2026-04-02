@@ -7,3 +7,8 @@ export const InviteUserSchema = z.object({
   branchId:    z.string().uuid(),
 });
 export type InviteUserDto = z.infer<typeof InviteUserSchema>;
+
+export const AcceptInviteSchema = z.object({
+  password: z.string().min(8),
+});
+export type AcceptInviteDto = z.infer<typeof AcceptInviteSchema>;

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Business } from '../database/entities/index';
 import { TenantContext } from '../common/types/tenant-context.type';
-import { UpdateBusinessDto } from './dto/update-business.dto';
+import { UpdateBusinessDto } from './dto/index';
 
 @Injectable()
 export class BusinessesService {
