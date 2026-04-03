@@ -5,7 +5,7 @@ import { Business, BusinessType, SubscriptionPlan } from '../database/entities/i
 import { Branch, UserBranch, Role, UserRole } from '../database/entities/index';
 import { User } from '../database/entities/index';
 import { OnboardingProgress, OnboardingStep, Setting } from '../database/entities/index';
-import { PosTerminal } from '../database/entities/index';
+import { PosTerminal, BusinessModule } from '../database/entities/index';
 import { RbacSeeder } from '../rbac/rbac.seeder';
 import { BusinessesService } from '../businesses/businesses.service';
 import { PlatformService } from '../platform/platform.service';
@@ -81,7 +81,7 @@ export class OnboardingService {
           currentStep: 'business_created' as OnboardingStep,
         }));
 
-        return { businessId: business.id, userId: user.id };
+        return { businessId: business.id, userId: user.id, platformOwnerId: platformOwner.id };
       });
     } catch (err: any) {
       // Re-throw NestJS HttpExceptions as-is
@@ -158,11 +158,35 @@ export class OnboardingService {
       );
       await em.save(settings);
 
-      // 5. Activate business
+      // 5. Seed module enablement
+      const trialEndsAt = new Date();
+      trialEndsAt.setDate(trialEndsAt.getDate() + 30);
+
+      const moduleSeeds: Array<{ moduleCode: string; status: 'active' | 'trial' | 'disabled' }> = [
+        { moduleCode: 'pos',       status: 'trial' },
+        { moduleCode: 'catalog',   status: 'trial' },
+        { moduleCode: 'inventory', status: 'trial' },
+        { moduleCode: 'reports',   status: 'trial' },
+        { moduleCode: 'settings',  status: 'active' },
+        { moduleCode: 'hr',        status: 'disabled' },
+        { moduleCode: 'finance',   status: 'disabled' },
+      ];
+
+      const modules = moduleSeeds.map((m) =>
+        em.getRepository(BusinessModule).create({
+          businessId: business.id,
+          moduleCode: m.moduleCode,
+          status:     m.status,
+          trialEndsAt: m.status === 'trial' ? trialEndsAt : null,
+        }),
+      );
+      await em.save(modules);
+
+      // 7. Activate business
       business.status = 'active';
       await em.save(business);
 
-      // 6. Advance onboarding step
+      // 8. Advance onboarding step
       await em.update(OnboardingProgress, { businessId }, { currentStep: 'provisioned' });
 
       return { provisioned: true, defaultBranchId: branch.id, defaultTerminalId: terminal.id };

@@ -13,14 +13,24 @@ export function setupGuards(router: Router) {
 
     const isAuthenticated = !!authStore.user
 
-    // Hydrate tenant context on cold load
-    if (isAuthenticated && !tenantStore.businessId && !tenantStore.platformOwnerId) {
+    // Hydrate tenant context once per session (isHydrated resets on page load)
+    if (isAuthenticated && !tenantStore.isHydrated) {
       try {
         await tenantStore.fetchTenant()
       } catch {
         // Network/5xx — fall through, guards handle unauthenticated state
       }
     }
+
+    console.debug('[guard]', {
+      to: to.name,
+      isAuthenticated,
+      emailVerified: authStore.emailVerified,
+      businessId: tenantStore.businessId,
+      platformOwnerId: tenantStore.platformOwnerId,
+      isOwner: tenantStore.isOwner,
+      enabledModules: tenantStore.enabledModules,
+    })
 
     const hasBusinessSetup      = !!tenantStore.businessId
     const isPlatformOwner       = tenantStore.isPlatformOwner

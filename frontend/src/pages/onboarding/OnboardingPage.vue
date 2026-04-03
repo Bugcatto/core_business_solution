@@ -163,6 +163,7 @@ import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import { authApi } from '@/api/auth.api'
+import { itemsApi } from '@/api/items.api'
 import { useTenantStore } from '@/stores/tenant.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { useRouter } from 'vue-router'
@@ -241,23 +242,27 @@ async function submitOnboarding() {
       language: 'en',
       email,
     })
-    const { businessId } = bizRes.data as unknown as { businessId: string; userId: string }
+    const { platformOwnerId } = bizRes.data as unknown as { businessId: string; userId: string; platformOwnerId: string }
 
     // Step 2: Select plan → backend auto-provisions branch, roles, terminal
-    const provRes = await authApi.selectPlan(form.value.plan)
-    const { defaultBranchId, defaultTerminalId } = provRes.data as unknown as { provisioned: boolean; defaultBranchId: string; defaultTerminalId: string }
+    await authApi.selectPlan(form.value.plan)
 
-    // Persist to tenant store
+    // Hydrate full tenant context from backend (permissions, enabledModules, etc.)
+    // Set platformOwnerId directly from createBusiness response — avoids race condition
+    // where getProfile() can't find the new record immediately after a cold backend start
+    await tenantStore.fetchTenant()
     tenantStore.setTenant({
-      businessId,
-      businessName: form.value.businessName,
-      branchId: defaultBranchId,
+      platformOwnerId,
       branchName: form.value.branchName || 'Main Branch',
-      industryType: form.value.industryType as IndustryType,
-      plan: form.value.plan,
-      terminalId: defaultTerminalId,
-      isOwner: true,
     })
+
+    // Create first item if the user filled it in
+    if (form.value.firstItemName.trim()) {
+      await itemsApi.create({
+        name:  form.value.firstItemName.trim(),
+        price: form.value.firstItemPrice ?? 0,
+      })
+    }
 
     currentStep.value = 5
   } catch (err: unknown) {

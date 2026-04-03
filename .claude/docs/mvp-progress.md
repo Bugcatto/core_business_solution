@@ -192,8 +192,43 @@ Sprint 3 (Owner Dashboard + Real Data)
 
 ---
 
+## Completed Work (2026-04-03)
+
+### Bug Fixes
+| Fix | Files changed |
+|-----|--------------|
+| Owner dashboard nav never rendered (`<!--v-if-->`) | `tenant.store.ts` — added `isHydrated` ref; `router/guards.ts` — guard now uses `isHydrated` instead of broken double-null check |
+| First item in onboarding never saved | `OnboardingPage.vue` — wired `itemsApi.create()` in `submitOnboarding()` |
+| Cold-start race condition on `/platform/me` | `OnboardingPage.vue` — sets `platformOwnerId` directly from `createBusiness` response; no longer depends on `getProfile()` succeeding |
+
+### Baseline Migration (2026-04-03)
+- Created `backend/src/database/migrations/20260101000000-InitialSchema.ts`
+- Captures full schema (24 tables, enum, extension) — runs first on any fresh database
+- All 4 migrations recorded in `migrations` table; `migration:run` → "No migrations are pending"
+- Fresh machine setup: `createdb pos_platform && npm run migration:run` → complete schema, no manual steps
+- `synchronize: true` remains gated to `NODE_ENV=development` for local dev convenience
+
+### Pre-Pilot Blocker Status
+| Blocker | Status |
+|---------|--------|
+| Owner dashboard navigation broken | ✅ Fixed |
+| First item in onboarding not saved | ✅ Fixed |
+| Baseline migration | ✅ Done |
+| Email sending service decision | ❌ Not decided — blocks HR/staff invite work |
+
+---
+
+## Phase 3 Build Order (Confirmed by Owner)
+1. Transaction enhancements (refunds UX, receipts, discounts)
+2. HR module
+3. Reports module
+
+---
+
 ## Risks / Known Limitations (Carry Forward)
 
 - `generateTxnNumber` uses total transaction count — not race-safe at high volume (fix: DB sequence)
 - Offline queue retries silently fail on business logic errors (not just network errors)
 - Existing data has 1:1 Firebase↔Business — migration needed in Sprint 1
+- Opening stock in onboarding: no UI step, no API call — deferred to Phase 3 inventory first-run
+- No email service configured — staff invite flow is blocked until this is decided

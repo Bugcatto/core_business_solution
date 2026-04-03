@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PlatformOwner } from '../database/entities/platform-owner.entity';
 import { Business } from '../database/entities/business.entity';
+import { User } from '../database/entities/user.entity';
 
 @Injectable()
 export class PlatformService {
@@ -11,6 +12,8 @@ export class PlatformService {
     private ownerRepo: Repository<PlatformOwner>,
     @InjectRepository(Business)
     private businessRepo: Repository<Business>,
+    @InjectRepository(User)
+    private userRepo: Repository<User>,
   ) {}
 
   // Find or create a PlatformOwner for a given Firebase UID.
@@ -54,9 +57,26 @@ export class PlatformService {
   }
 
   // Full platform owner profile + business list — response for GET /platform/me
+  // Auto-creates a PlatformOwner record for existing users who pre-date Sprint 1
+  // (they have a User record but no PlatformOwner yet).
   async getProfile(firebaseUid: string) {
-    const owner = await this.ownerRepo.findOne({ where: { firebaseUid } });
-    if (!owner) throw new NotFoundException('Platform owner not found');
+    let owner = await this.ownerRepo.findOne({ where: { firebaseUid } });
+
+    if (!owner) {
+      // Look up email from the users table (existing account, pre-Sprint-1)
+      const user = await this.userRepo.findOne({ where: { firebaseUid } });
+      if (!user) throw new NotFoundException('No account found for this user');
+
+      owner = await this.findOrCreate(firebaseUid, user.email);
+
+      // Also link the business to this platform owner if not already linked
+      if (user.businessId) {
+        await this.businessRepo.update(
+          { id: user.businessId, platformOwnerId: null as any },
+          { platformOwnerId: owner.id },
+        );
+      }
+    }
 
     const businesses = await this.getBusinesses(owner.id);
 

@@ -47,6 +47,9 @@ export const useTenantStore = defineStore('tenant', () => {
   const permissions = ref<string[]>(saved.permissions ?? [])
   const isOwner = ref<boolean>(saved.isOwner ?? false)
 
+  // Not persisted — resets to false on every page load, ensuring one fresh fetch per session
+  const isHydrated = ref(false)
+
   // ── Persist to localStorage on any change ─────────────────────────────────
   function persist() {
     const state: TenantState = {
@@ -98,6 +101,10 @@ export const useTenantStore = defineStore('tenant', () => {
     return permissions.value.includes(code)
   }
 
+  function hasModule(moduleCode: string): boolean {
+    return enabledModules.value.includes(moduleCode)
+  }
+
   function clearTenant() {
     platformOwnerId.value = null
     ownedBusinesses.value = []
@@ -131,25 +138,29 @@ export const useTenantStore = defineStore('tenant', () => {
     try {
       const { data } = await authApi.me()
       setTenant({
-        businessId:   data.businessId,
-        branchId:     data.branchId,
-        businessName: data.businessName,
-        industryType: data.businessType,
-        plan:         data.plan,
-        terminalId:   data.defaultTerminalId ?? undefined,
-        permissions:  data.permissions ?? [],
-        isOwner:      data.isOwner ?? false,
+        businessId:     data.businessId,
+        branchId:       data.branchId,
+        businessName:   data.businessName,
+        industryType:   data.businessType,
+        plan:           data.plan,
+        terminalId:     data.defaultTerminalId ?? undefined,
+        permissions:    data.permissions ?? [],
+        enabledModules: data.enabledModules ?? [],
+        isOwner:        data.isOwner ?? false,
       })
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status
       if (status !== 404) throw err
     }
+
+    isHydrated.value = true
   }
 
   return {
     platformOwnerId,
     ownedBusinesses,
     isPlatformOwner,
+    isHydrated,
     isFreePlan,
     hasMultipleBusinesses,
     businessId,
@@ -166,5 +177,6 @@ export const useTenantStore = defineStore('tenant', () => {
     clearTenant,
     fetchTenant,
     hasPermission,
+    hasModule,
   }
 })

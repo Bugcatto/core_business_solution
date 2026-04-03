@@ -8,6 +8,7 @@ import {
   Category, Item, ItemVariant, PosTerminal,
   Transaction, TransactionLine, Payment,
   Inventory, InventoryMovement, InventoryAdjustment, InventoryTransfer,
+  BusinessModule,
 } from './entities/index';
 
 export const AppDataSource = new DataSource({
@@ -21,6 +22,7 @@ export const AppDataSource = new DataSource({
     Category, Item, ItemVariant, PosTerminal,
     Transaction, TransactionLine, Payment,
     Inventory, InventoryMovement, InventoryAdjustment, InventoryTransfer,
+    BusinessModule,
   ],
   migrations: [__dirname + '/migrations/*.ts'],
 });
