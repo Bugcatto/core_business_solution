@@ -110,7 +110,12 @@ const routes: RouteRecordRaw[] = [
         path: 'staff',
         name: 'Staff',
         component: () => import('@/pages/staff/StaffPage.vue'),
-        meta: { permission: 'users.invite' },
+        meta: { permission: 'user.invite' },
+      },
+      {
+        path: 'transactions',
+        name: 'Transactions',
+        component: () => import('@/pages/transactions/TransactionsPage.vue'),
       },
     ],
   },

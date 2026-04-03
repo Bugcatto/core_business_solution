@@ -30,3 +30,7 @@ export {
   InventoryAdjustment,
   InventoryTransfer,
 } from './inventory.entity';
+
+// Module enablement
+export { BusinessModule } from './business-module.entity';
+export type { ModuleStatus } from './business-module.entity';

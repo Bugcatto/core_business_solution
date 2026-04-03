@@ -14,25 +14,25 @@ export class BranchesController {
   constructor(private readonly service: BranchesService) {}
 
   @Get()
-  @Permissions('branches.view')
+  @Permissions('branch.read')
   findAll(@CurrentUser() ctx: TenantContext) {
     return this.service.findAll(ctx);
   }
 
   @Get(':id')
-  @Permissions('branches.view')
+  @Permissions('branch.read')
   findOne(@CurrentUser() ctx: TenantContext, @Param('id') id: string) {
     return this.service.findOne(ctx, id);
   }
 
   @Post()
-  @Permissions('branches.manage')
+  @Permissions('branch.manage')
   create(@CurrentUser() ctx: TenantContext, @Body() dto: CreateBranchDto) {
     return this.service.create(ctx, dto);
   }
 
   @Patch(':id')
-  @Permissions('branches.manage')
+  @Permissions('branch.manage')
   update(
     @CurrentUser() ctx: TenantContext,
     @Param('id') id: string,
@@ -42,7 +42,7 @@ export class BranchesController {
   }
 
   @Delete(':id')
-  @Permissions('branches.manage')
+  @Permissions('branch.manage')
   deactivate(@CurrentUser() ctx: TenantContext, @Param('id') id: string) {
     return this.service.deactivate(ctx, id);
   }

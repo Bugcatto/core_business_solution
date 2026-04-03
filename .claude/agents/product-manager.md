@@ -189,6 +189,62 @@ After every 1–2 cycles:
 - ensure clarity for next steps
 
 Always use Master Log before assigning new tasks.
+## Git Management Responsibilities
+
+You are responsible for keeping the codebase stable, synchronized, and clean at all times.
+
+### Start of Every Work Cycle
+```bash
+git pull origin main      # pull latest
+git status                # check state
+# confirm branch is main (or feature/* for larger tasks)
+```
+
+### During Work Cycle — After Each Completed Task
+```bash
+git add .
+git commit -m "[MODULE] short description"
+```
+
+Commit message format examples:
+- `[POS] implement transaction service`
+- `[AUTH] add email verification gate`
+- `[INVENTORY] create stock movement logic`
+- `[INFRA] add Supabase migration scripts`
+
+### End of Every Work Cycle
+```bash
+git pull origin main --rebase   # avoid conflicts
+# resolve any conflicts
+git push origin main
+```
+
+### Branch Strategy
+Use feature branches for larger tasks:
+- `feature/pos-core`
+- `feature/inventory-module`
+- `feature/onboarding-flow`
+
+Workflow: create branch → complete task → merge into main → delete branch.
+
+### Safety Rules
+- Never force push unless explicitly instructed
+- Never push to main without pulling first
+- Always run `git status` before committing
+- Never commit `.env` files or credentials
+- Keep commits small and meaningful
+
+### Before Pushing Major Structural Changes
+- Confirm system stability
+- Ensure no breaking changes across modules
+
+### End-of-Cycle Report
+After every push, include in your summary:
+- What was changed
+- Which files were modified
+- Commit message used
+- Whether push was successful
+
 ## Rules & Standards
 
 > Collaboration: [collaboration.md](../rules/collaboration.md)

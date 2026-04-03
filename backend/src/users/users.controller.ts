@@ -43,18 +43,19 @@ export class UsersController {
       plan:              business.subscriptionPlan,
       defaultTerminalId: terminal?.id ?? null,
       permissions:       ctx.permissions ?? [],
+      enabledModules:    ctx.enabledModules ?? [],
       isOwner:           ctx.isOwner ?? false,
     };
   }
 
   @Get()
-  @Permissions('users.manage', 'users.invite')
+  @Permissions('user.manage', 'user.invite')
   findAll(@CurrentUser() ctx: TenantContext) {
     return this.service.findAllForBusiness(ctx.businessId);
   }
 
   @Post('invite')
-  @Permissions('users.invite')
+  @Permissions('user.invite')
   invite(@CurrentUser() ctx: TenantContext, @Body() dto: InviteUserDto) {
     return this.service.invite(ctx, dto);
   }
@@ -93,13 +94,13 @@ export class UsersController {
 
   // ── Reactivate deactivated staff ──────────────────────────────────────────
   @Post(':id/reactivate')
-  @Permissions('users.manage')
+  @Permissions('user.manage')
   reactivate(@CurrentUser() ctx: TenantContext, @Param('id') id: string) {
     return this.service.reactivate(ctx, id);
   }
 
   @Delete(':id')
-  @Permissions('users.manage')
+  @Permissions('user.manage')
   deactivate(@CurrentUser() ctx: TenantContext, @Param('id') id: string) {
     return this.service.deactivate(ctx, id);
   }

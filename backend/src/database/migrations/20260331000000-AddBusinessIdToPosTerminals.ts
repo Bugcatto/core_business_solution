@@ -4,11 +4,11 @@ export class AddBusinessIdToPosTerminals20260331000000 implements MigrationInter
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
       ALTER TABLE pos_terminals
-        ADD COLUMN business_id UUID NOT NULL REFERENCES businesses(id)
+        ADD COLUMN IF NOT EXISTS business_id UUID REFERENCES businesses(id)
     `);
 
     await queryRunner.query(`
-      CREATE INDEX idx_pos_terminals_business ON pos_terminals(business_id)
+      CREATE INDEX IF NOT EXISTS idx_pos_terminals_business ON pos_terminals(business_id)
     `);
   }
 

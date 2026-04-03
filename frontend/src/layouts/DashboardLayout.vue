@@ -130,10 +130,11 @@ function isActive(path: string) {
 }
 
 const navItems = [
-  { name: 'Dashboard', label: t('nav.dashboard'), icon: 'dashboard', to: '/dashboard', permission: null, ownerOnly: false },
-  { name: 'Items', label: t('nav.items'), icon: 'inventory_2', to: '/items', permission: null, ownerOnly: false },
-  { name: 'Staff', label: t('nav.staff'), icon: 'group', to: '/staff', permission: 'users.invite', ownerOnly: false },
-  { name: 'POS', label: t('nav.pos'), icon: 'point_of_sale', to: '/pos', permission: null, ownerOnly: false },
+  { name: 'Dashboard', label: t('nav.dashboard'), icon: 'dashboard',     to: '/dashboard', permission: null,           module: null },
+  { name: 'Items',     label: t('nav.items'),     icon: 'inventory_2',   to: '/items',     permission: null,           module: 'catalog' },
+  { name: 'Staff',     label: t('nav.staff'),     icon: 'group',         to: '/staff',     permission: 'user.invite',  module: null },
+  { name: 'POS',       label: t('nav.pos'),       icon: 'point_of_sale', to: '/pos',       permission: null,              module: 'pos' },
+  { name: 'Transactions', label: 'Transactions',  icon: 'receipt_long',  to: '/transactions', permission: 'pos.sale.create', module: 'pos' },
 ]
 
 // Platform owner nav — shown above the business nav when user is a platform owner
@@ -142,6 +143,10 @@ const ownerNavItems = [
 ]
 
 const visibleNavItems = computed(() =>
-  navItems.filter(item => !item.permission || tenantStore.hasPermission(item.permission))
+  navItems.filter((item) => {
+    if (item.permission && !tenantStore.hasPermission(item.permission)) return false
+    if (item.module && !tenantStore.isOwner && !tenantStore.enabledModules.includes(item.module)) return false
+    return true
+  })
 )
 </script>

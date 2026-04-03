@@ -80,6 +80,10 @@ export class TenantMiddleware implements NestMiddleware {
           ? await this.usersService.getPermissions(user.id, branchId)
           : [];
 
+        const enabledModules = await this.businessesService
+          .getEnabledModules(business.id)
+          .catch(() => []);
+
         req.tenantContext = {
           platformOwnerId: platformOwner.id,
           userId:          user?.id ?? '',
@@ -87,6 +91,7 @@ export class TenantMiddleware implements NestMiddleware {
           branchId,
           firebaseUid:     req.firebaseUid,
           permissions,
+          enabledModules,
           isOwner:         !!user && business.ownerUserId === user.id,
           businessType:    business.businessType,
           plan:            business.subscriptionPlan,
@@ -117,6 +122,10 @@ export class TenantMiddleware implements NestMiddleware {
         ? await this.platformService.findById(business.platformOwnerId).catch(() => null)
         : null;
 
+      const enabledModules = await this.businessesService
+        .getEnabledModules(user.businessId)
+        .catch(() => []);
+
       req.tenantContext = {
         platformOwnerId: platformOwner?.id ?? '',
         userId:          user.id,
@@ -124,6 +133,7 @@ export class TenantMiddleware implements NestMiddleware {
         branchId,
         firebaseUid:     req.firebaseUid,
         permissions,
+        enabledModules,
         isOwner:         business.ownerUserId === user.id,
         businessType:    business.businessType,
         plan:            business.subscriptionPlan,

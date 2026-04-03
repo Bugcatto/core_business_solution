@@ -6,8 +6,8 @@ import { CheckoutService } from './checkout.service';
 import { TransactionsService } from './transactions.service';
 import { PaymentsService } from './payments.service';
 import { ReceiptService } from './receipt.service';
-import { FirebaseAuthGuard, PermissionsGuard } from '../common/guards/index';
-import { CurrentUser, Permissions } from '../common/decorators/index';
+import { FirebaseAuthGuard, PermissionsGuard, ModuleGuard } from '../common/guards/index';
+import { CurrentUser, Permissions, RequireModule } from '../common/decorators/index';
 import { TenantContext } from '../common/types/tenant-context.type';
 import {
   CheckoutDto, TransactionQueryDto,
@@ -15,7 +15,8 @@ import {
 } from './dto/index';
 
 @Controller('transactions')
-@UseGuards(FirebaseAuthGuard, PermissionsGuard)
+@UseGuards(FirebaseAuthGuard, ModuleGuard, PermissionsGuard)
+@RequireModule('pos')
 
 export class TransactionsController {
   constructor(
@@ -27,20 +28,20 @@ export class TransactionsController {
 
   // ── Checkout ────────────────────────────────────────────────────────────────
   @Post('checkout')
-  @Permissions('pos.create')
+  @Permissions('pos.sale.create')
   checkout(@CurrentUser() ctx: TenantContext, @Body() dto: CheckoutDto) {
     return this.checkoutService.checkout(ctx, dto);
   }
 
   // ── History ─────────────────────────────────────────────────────────────────
   @Get()
-  @Permissions('pos.create')
+  @Permissions('pos.sale.create')
   findAll(@CurrentUser() ctx: TenantContext, @Query() query: TransactionQueryDto) {
     return this.transactionsService.findAll(ctx, query);
   }
 
   @Get('summary')
-  @Permissions('reports.view')
+  @Permissions('reports.sales.read')
   getDailySummary(
     @CurrentUser() ctx: TenantContext,
     @Query('date') date: string,
@@ -52,27 +53,27 @@ export class TransactionsController {
   }
 
   @Get(':id')
-  @Permissions('pos.create')
+  @Permissions('pos.sale.create')
   findOne(@CurrentUser() ctx: TenantContext, @Param('id') id: string) {
     return this.transactionsService.findOne(ctx, id);
   }
 
   // ── Receipt ─────────────────────────────────────────────────────────────────
   @Get(':id/receipt')
-  @Permissions('pos.create')
+  @Permissions('pos.sale.create')
   getReceipt(@CurrentUser() ctx: TenantContext, @Param('id') id: string) {
     return this.receiptService.getReceiptData(ctx, id);
   }
 
   @Get(':id/receipt/thermal')
-  @Permissions('pos.create')
+  @Permissions('pos.sale.create')
   getThermalReceipt(@CurrentUser() ctx: TenantContext, @Param('id') id: string) {
     return this.receiptService.getThermalText(ctx, id);
   }
 
   // ── Void ────────────────────────────────────────────────────────────────────
   @Patch(':id/void')
-  @Permissions('pos.void')
+  @Permissions('pos.sale.void')
   void(
     @CurrentUser() ctx: TenantContext,
     @Param('id') id: string,
@@ -83,7 +84,7 @@ export class TransactionsController {
 
   // ── Refund ──────────────────────────────────────────────────────────────────
   @Post(':id/refund')
-  @Permissions('pos.refund')
+  @Permissions('pos.sale.refund')
   refund(
     @CurrentUser() ctx: TenantContext,
     @Param('id') id: string,

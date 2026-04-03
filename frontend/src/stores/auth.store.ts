@@ -43,6 +43,8 @@ export const useAuthStore = defineStore('auth', () => {
       }
 
       // After authStateReady / first callback, auth.currentUser is definitive.
+      // onAuthStateChanged fires automatically after a Google redirect completes —
+      // no need to call getRedirectResult here (that would block init for all users).
       const firebaseUser = auth.currentUser
       user.value = firebaseUser
       idToken.value = firebaseUser ? await getIdToken(firebaseUser) : null

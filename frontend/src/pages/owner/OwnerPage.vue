@@ -98,14 +98,15 @@ async function enterBusiness(business: OwnedBusiness) {
   try {
     const { data } = await authApi.me()
     tenantStore.setTenant({
-      businessId:   data.businessId,
-      branchId:     data.branchId,
-      businessName: data.businessName,
-      industryType: data.businessType,
-      plan:         data.plan,
-      terminalId:   data.defaultTerminalId ?? undefined,
-      permissions:  data.permissions ?? [],
-      isOwner:      data.isOwner ?? false,
+      businessId:     data.businessId,
+      branchId:       data.branchId,
+      businessName:   data.businessName,
+      industryType:   data.businessType,
+      plan:           data.plan,
+      terminalId:     data.defaultTerminalId ?? undefined,
+      permissions:    data.permissions ?? [],
+      enabledModules: data.enabledModules ?? [],
+      isOwner:        data.isOwner ?? false,
     })
   } catch {
     // Context fetch failed — still navigate, guards will handle it

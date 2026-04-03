@@ -7,6 +7,7 @@ export interface TenantContext {
   branchId:        string;
   firebaseUid:     string;
   permissions:     string[];
+  enabledModules:  string[];
   isOwner:         boolean;
   businessType:    string;
   plan:            string;

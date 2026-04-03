@@ -6,12 +6,13 @@ import { InventoryService } from './inventory.service';
 import { InventoryAdjustmentsService, CreateAdjustmentDto } from './inventory-adjustments.service';
 import { InventoryTransfersService, CreateTransferDto } from './inventory-transfers.service';
 import { InventoryMovementsService, MovementQueryDto } from './inventory-movements.service';
-import { FirebaseAuthGuard, PermissionsGuard } from '../common/guards/index';
-import { CurrentUser, Permissions } from '../common/decorators/index';
+import { FirebaseAuthGuard, PermissionsGuard, ModuleGuard } from '../common/guards/index';
+import { CurrentUser, Permissions, RequireModule } from '../common/decorators/index';
 import { TenantContext } from '../common/types/tenant-context.type';
 
 @Controller('inventory')
-@UseGuards(FirebaseAuthGuard, PermissionsGuard)
+@UseGuards(FirebaseAuthGuard, ModuleGuard, PermissionsGuard)
+@RequireModule('inventory')
 
 export class InventoryController {
   constructor(
@@ -23,7 +24,7 @@ export class InventoryController {
 
   // ── Stock levels ────────────────────────────────────────────────────────────
   @Get()
-  @Permissions('inventory.view')
+  @Permissions('inventory.stock.read', 'inventory.item.read')
   getStockLevels(
     @CurrentUser() ctx: TenantContext,
     @Query('branchId') branchId?: string,
@@ -32,13 +33,13 @@ export class InventoryController {
   }
 
   @Get('low-stock')
-  @Permissions('inventory.view')
+  @Permissions('inventory.stock.read', 'inventory.item.read')
   getLowStock(@CurrentUser() ctx: TenantContext) {
     return this.inventoryService.getLowStockItems(ctx);
   }
 
   @Patch('opening-stock')
-  @Permissions('inventory.adjust')
+  @Permissions('inventory.stock.adjust')
   setOpeningStock(
     @CurrentUser() ctx: TenantContext,
     @Body() body: {
@@ -54,7 +55,7 @@ export class InventoryController {
   }
 
   @Patch(':itemId/reorder-level')
-  @Permissions('inventory.adjust')
+  @Permissions('inventory.stock.adjust')
   updateReorderLevel(
     @CurrentUser() ctx: TenantContext,
     @Param('itemId') itemId: string,
@@ -65,20 +66,20 @@ export class InventoryController {
 
   // ── Movements audit trail ───────────────────────────────────────────────────
   @Get('movements')
-  @Permissions('inventory.view')
+  @Permissions('inventory.stock.read', 'inventory.item.read')
   getMovements(@CurrentUser() ctx: TenantContext, @Query() query: MovementQueryDto) {
     return this.movementsService.findAll(ctx, query);
   }
 
   @Get('movements/item/:itemId')
-  @Permissions('inventory.view')
+  @Permissions('inventory.stock.read', 'inventory.item.read')
   getItemHistory(@CurrentUser() ctx: TenantContext, @Param('itemId') itemId: string) {
     return this.movementsService.getItemHistory(ctx, itemId);
   }
 
   // ── Adjustments ─────────────────────────────────────────────────────────────
   @Get('adjustments')
-  @Permissions('inventory.view')
+  @Permissions('inventory.stock.read', 'inventory.item.read')
   getAdjustments(
     @CurrentUser() ctx: TenantContext,
     @Query('status') status?: string,
@@ -87,19 +88,19 @@ export class InventoryController {
   }
 
   @Post('adjustments')
-  @Permissions('inventory.adjust')
+  @Permissions('inventory.stock.adjust')
   createAdjustment(@CurrentUser() ctx: TenantContext, @Body() dto: CreateAdjustmentDto) {
     return this.adjustmentsService.create(ctx, dto);
   }
 
   @Patch('adjustments/:id/approve')
-  @Permissions('inventory.approve')
+  @Permissions('inventory.stock.approve')
   approveAdjustment(@CurrentUser() ctx: TenantContext, @Param('id') id: string) {
     return this.adjustmentsService.approve(ctx, id);
   }
 
   @Patch('adjustments/:id/reject')
-  @Permissions('inventory.approve')
+  @Permissions('inventory.stock.approve')
   rejectAdjustment(
     @CurrentUser() ctx: TenantContext,
     @Param('id') id: string,
@@ -110,13 +111,13 @@ export class InventoryController {
 
   // ── Transfers ───────────────────────────────────────────────────────────────
   @Get('transfers')
-  @Permissions('inventory.view')
+  @Permissions('inventory.stock.read', 'inventory.item.read')
   getTransfers(@CurrentUser() ctx: TenantContext) {
     return this.transfersService.findAll(ctx);
   }
 
   @Post('transfers')
-  @Permissions('inventory.transfer')
+  @Permissions('inventory.transfer.create')
   createTransfer(@CurrentUser() ctx: TenantContext, @Body() dto: CreateTransferDto) {
     return this.transfersService.create(ctx, dto);
   }

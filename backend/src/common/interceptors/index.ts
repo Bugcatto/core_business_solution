@@ -46,6 +46,7 @@ export class TenantContextInterceptor implements NestInterceptor {
       branchId,
       firebaseUid:     req.firebaseUid,
       permissions,
+      enabledModules:  [],   // not resolved in interceptor — TenantMiddleware handles this
       isOwner:         business.ownerUserId === user.id,
       businessType:    business.businessType,
       plan:            business.subscriptionPlan,

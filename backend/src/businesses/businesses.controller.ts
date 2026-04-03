@@ -17,7 +17,7 @@ export class BusinessesController {
   }
 
   @Patch('me')
-  @Permissions('settings.manage')
+  @Permissions('settings.general.manage')
   update(
     @CurrentUser() ctx: TenantContext,
     @Body() dto: UpdateBusinessDto,

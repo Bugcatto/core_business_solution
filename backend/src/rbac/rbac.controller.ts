@@ -13,16 +13,16 @@ import { TenantContext } from '../common/types/tenant-context.type';
 export class RbacController {
   constructor(private readonly service: RbacService) {}
 
-  // users.invite is included so Managers can load roles when inviting staff.
+  // user.invite is included so managers can load roles when inviting staff.
   // The Owner role is excluded from results — it must not be assignable via invite.
   @Get('roles')
-  @Permissions('roles.manage', 'users.invite')
+  @Permissions('user.role.assign', 'user.invite')
   getRoles(@CurrentUser() ctx: TenantContext) {
     return this.service.getRolesForInvite(ctx);
   }
 
   @Post('roles')
-  @Permissions('roles.manage')
+  @Permissions('user.role.assign')
   createRole(
     @CurrentUser() ctx: TenantContext,
     @Body() body: { name: string; description?: string },
@@ -31,25 +31,25 @@ export class RbacController {
   }
 
   @Delete('roles/:id')
-  @Permissions('roles.manage')
+  @Permissions('user.role.assign')
   deleteRole(@CurrentUser() ctx: TenantContext, @Param('id') id: string) {
     return this.service.deleteRole(ctx, id);
   }
 
   @Get('permissions')
-  @Permissions('roles.manage')
+  @Permissions('user.role.assign')
   getAllPermissions() {
     return this.service.getAllPermissions();
   }
 
   @Get('roles/:id/permissions')
-  @Permissions('roles.manage')
+  @Permissions('user.role.assign')
   getRolePermissions(@CurrentUser() ctx: TenantContext, @Param('id') id: string) {
     return this.service.getRolePermissions(ctx, id);
   }
 
   @Put('roles/:id/permissions')
-  @Permissions('roles.manage')
+  @Permissions('user.role.assign')
   setRolePermissions(
     @CurrentUser() ctx: TenantContext,
     @Param('id') id: string,
@@ -59,7 +59,7 @@ export class RbacController {
   }
 
   @Post('users/:userId/roles/:roleId')
-  @Permissions('users.manage')
+  @Permissions('user.manage', 'user.role.assign')
   assignRole(
     @CurrentUser() ctx: TenantContext,
     @Param('userId') userId: string,
@@ -70,7 +70,7 @@ export class RbacController {
   }
 
   @Delete('users/:userId/roles/:roleId')
-  @Permissions('users.manage')
+  @Permissions('user.manage', 'user.role.assign')
   revokeRole(
     @CurrentUser() ctx: TenantContext,
     @Param('userId') userId: string,

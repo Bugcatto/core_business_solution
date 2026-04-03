@@ -223,6 +223,36 @@ Sprint 3 (Owner Dashboard + Real Data)
 2. HR module
 3. Reports module
 
+### Email Service Decision (2026-04-03)
+- **Resend** chosen for all email sending
+- Covers: staff invite emails + tenant onboarding confirmation
+- Required before HR module work begins
+
+---
+
+## Phase 3 — Transaction Enhancements Scope (2026-04-03)
+
+### Backend — Already complete
+All transaction backend endpoints exist and are working:
+- Checkout, list, detail, daily summary, receipt (JSON + thermal text), void, refund
+
+### Frontend — Gaps to build
+
+| # | Gap | Size | Notes |
+|---|-----|------|-------|
+| 1 | Discount input UI on CartPanel | Small | `setDiscount()` in store exists, display exists — just no button to enter amount |
+| 2 | Transaction history page (`/transactions`) | Medium | Route missing entirely. Needs list + date/status filter |
+| 3 | Transaction detail view (lines, payments, totals) | Medium | Part of history page — drill-in from list |
+| 4 | Void UI (manager only, with reason) | Small | Triggered from detail view; call `transactionsApi.void()` |
+| 5 | Refund UI — line-level quantity selection | Medium | Dialog from detail view; `transactionsApi.refund()` payload is wrong — fix to send `{ lines, reason, paymentMethod }` |
+| 6 | Receipt print — print only receipt, not full page | Small | `window.print()` prints whole page; add print CSS or open printable popup |
+
+### Build order
+1. Discount input UI (unblocked, small, high cashier value)
+2. Transaction history page + detail view (needed before void/refund UI can live anywhere)
+3. Void + Refund UI (build after detail view exists)
+4. Receipt print fix (can be done anytime)
+
 ---
 
 ## Risks / Known Limitations (Carry Forward)

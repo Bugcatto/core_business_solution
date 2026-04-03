@@ -5,54 +5,78 @@ import { Permission } from '../database/entities/index';
 import { Role, RolePermission, UserRole } from '../database/entities/index';
 
 // ─── All system permissions ───────────────────────────────────────────────────
-// Add new permissions here as new modules are built.
-// Format: '<module>.<action>'
+// Format: '<module>.<resource>.<action>'
 export const ALL_PERMISSIONS = [
+  // Platform
+  { code: 'platform.business.read',    module: 'platform',   description: 'Read tenant businesses' },
+  { code: 'platform.business.manage',  module: 'platform',   description: 'Manage tenant businesses' },
+  { code: 'platform.user.read',        module: 'platform',   description: 'Read platform users' },
+  { code: 'platform.billing.manage',   module: 'platform',   description: 'Manage platform billing' },
+  { code: 'platform.support.access',   module: 'platform',   description: 'Access platform support tools' },
+
+  // Onboarding
+  { code: 'onboarding.business.create', module: 'onboarding', description: 'Create a business during onboarding' },
+  { code: 'onboarding.branch.setup',    module: 'onboarding', description: 'Set up a branch during onboarding' },
+  { code: 'onboarding.module.configure',module: 'onboarding', description: 'Configure modules during onboarding' },
+
   // POS
-  { code: 'pos.create',          module: 'pos',       description: 'Create a transaction / sale' },
-  { code: 'pos.void',            module: 'pos',       description: 'Void a transaction' },
-  { code: 'pos.discount',        module: 'pos',       description: 'Apply manual discounts' },
-  { code: 'pos.refund',          module: 'pos',       description: 'Issue a refund' },
+  { code: 'pos.sale.create',    module: 'pos', description: 'Create a sale / transaction' },
+  { code: 'pos.sale.read',      module: 'pos', description: 'View transactions' },
+  { code: 'pos.sale.void',      module: 'pos', description: 'Void a transaction' },
+  { code: 'pos.sale.refund',    module: 'pos', description: 'Issue a refund' },
+  { code: 'pos.discount.apply', module: 'pos', description: 'Apply a manual discount' },
+  { code: 'pos.shift.open',     module: 'pos', description: 'Open a POS shift' },
+  { code: 'pos.shift.close',    module: 'pos', description: 'Close a POS shift' },
+  { code: 'pos.shift.read',     module: 'pos', description: 'View shift summaries' },
 
   // Inventory
-  { code: 'inventory.view',      module: 'inventory', description: 'View stock levels' },
-  { code: 'inventory.adjust',    module: 'inventory', description: 'Create manual adjustments (pending approval)' },
-  { code: 'inventory.approve',   module: 'inventory', description: 'Approve inventory adjustments' },
-  { code: 'inventory.transfer',  module: 'inventory', description: 'Transfer stock between branches' },
-
-  // Catalog
-  { code: 'items.view',          module: 'catalog',   description: 'View items and categories' },
-  { code: 'items.manage',        module: 'catalog',   description: 'Create, edit, delete items' },
-
-  // Contacts
-  { code: 'contacts.view',       module: 'contacts',  description: 'View contacts' },
-  { code: 'contacts.manage',     module: 'contacts',  description: 'Create and edit contacts' },
-
-  // Reports
-  { code: 'reports.view',        module: 'reports',   description: 'View sales and inventory reports' },
-  { code: 'reports.export',      module: 'reports',   description: 'Export reports to CSV / PDF' },
+  { code: 'inventory.item.read',        module: 'inventory', description: 'View inventory items' },
+  { code: 'inventory.item.manage',      module: 'inventory', description: 'Create and edit inventory items' },
+  { code: 'inventory.stock.read',       module: 'inventory', description: 'View stock levels' },
+  { code: 'inventory.stock.adjust',     module: 'inventory', description: 'Create stock adjustments (pending approval)' },
+  { code: 'inventory.stock.approve',    module: 'inventory', description: 'Approve stock adjustments' },
+  { code: 'inventory.transfer.create',  module: 'inventory', description: 'Create stock transfers between branches' },
+  { code: 'inventory.transfer.approve', module: 'inventory', description: 'Approve stock transfers' },
 
   // HR
-  { code: 'hr.view',             module: 'hr',        description: 'View employee records' },
-  { code: 'hr.manage',           module: 'hr',        description: 'Manage employee records' },
+  { code: 'hr.employee.read',    module: 'hr', description: 'View employee records' },
+  { code: 'hr.employee.manage',  module: 'hr', description: 'Create and edit employee records' },
+  { code: 'hr.schedule.read',    module: 'hr', description: 'View employee schedules' },
+  { code: 'hr.schedule.manage',  module: 'hr', description: 'Manage employee schedules' },
+  { code: 'hr.payroll.read',     module: 'hr', description: 'View payroll records' },
+  { code: 'hr.payroll.manage',   module: 'hr', description: 'Manage payroll records' },
 
-  // Users & access
-  { code: 'users.invite',        module: 'users',     description: 'Invite new users' },
-  { code: 'users.manage',        module: 'users',     description: 'Manage user accounts and roles' },
+  // Finance
+  { code: 'finance.revenue.read',    module: 'finance', description: 'View revenue data' },
+  { code: 'finance.expense.read',    module: 'finance', description: 'View expense records' },
+  { code: 'finance.expense.manage',  module: 'finance', description: 'Manage expense records' },
+  { code: 'finance.report.read',     module: 'finance', description: 'View financial reports' },
+  { code: 'finance.report.export',   module: 'finance', description: 'Export financial reports' },
+  { code: 'finance.tax.manage',      module: 'finance', description: 'Manage tax configuration' },
+
+  // Reports
+  { code: 'reports.sales.read',     module: 'reports', description: 'View sales reports' },
+  { code: 'reports.inventory.read', module: 'reports', description: 'View inventory reports' },
+  { code: 'reports.hr.read',        module: 'reports', description: 'View HR reports' },
+  { code: 'reports.finance.read',   module: 'reports', description: 'View finance reports' },
+  { code: 'reports.export',         module: 'reports', description: 'Export any report' },
 
   // Settings
-  { code: 'settings.view',       module: 'settings',  description: 'View business settings' },
-  { code: 'settings.manage',     module: 'settings',  description: 'Update business settings' },
+  { code: 'settings.general.read',   module: 'settings', description: 'View general settings' },
+  { code: 'settings.general.manage', module: 'settings', description: 'Manage general settings' },
+  { code: 'settings.tax.manage',     module: 'settings', description: 'Manage tax settings' },
+  { code: 'settings.module.manage',  module: 'settings', description: 'Enable and disable modules' },
+  { code: 'settings.receipt.manage', module: 'settings', description: 'Manage receipt templates' },
+  { code: 'settings.billing.manage', module: 'settings', description: 'Manage subscription and billing' },
 
-  // Branches
-  { code: 'branches.view',       module: 'branches',  description: 'View branch list' },
-  { code: 'branches.manage',     module: 'branches',  description: 'Create and edit branches' },
-
-  // Roles
-  { code: 'roles.manage',        module: 'rbac',      description: 'Manage roles and permissions' },
-
-  // Subscription
-  { code: 'subscription.manage', module: 'billing',   description: 'Manage subscription and billing' },
+  // Users & Branches
+  { code: 'user.invite',       module: 'users',    description: 'Invite new users' },
+  { code: 'user.manage',       module: 'users',    description: 'Manage user accounts' },
+  { code: 'user.role.assign',  module: 'users',    description: 'Assign roles to users' },
+  { code: 'user.deactivate',   module: 'users',    description: 'Deactivate user accounts' },
+  { code: 'branch.read',       module: 'branches', description: 'View branch list' },
+  { code: 'branch.create',     module: 'branches', description: 'Create new branches' },
+  { code: 'branch.manage',     module: 'branches', description: 'Manage branch settings' },
 ] as const;
 
 // ─── Role → permission map ────────────────────────────────────────────────────
@@ -60,37 +84,53 @@ export const ALL_PERMISSIONS = [
 // All other roles list their permissions explicitly here.
 export const ROLE_PERMISSIONS: Record<string, string[]> = {
   SysAdmin: [
-    'settings.manage', 'users.manage', 'branches.manage',
-    'roles.manage', 'reports.view', 'reports.export',
-    'subscription.manage', 'items.view', 'items.manage', 'hr.manage',
+    'settings.general.manage', 'settings.module.manage', 'settings.receipt.manage',
+    'user.manage', 'user.invite', 'user.role.assign', 'user.deactivate',
+    'branch.create', 'branch.manage', 'branch.read',
+    'reports.sales.read', 'reports.inventory.read', 'reports.export',
   ],
-  Manager: [
-    'pos.create', 'pos.void', 'pos.discount', 'pos.refund',
-    'inventory.view', 'inventory.adjust', 'inventory.approve', 'inventory.transfer',
-    'items.view', 'items.manage',
-    'contacts.view', 'contacts.manage',
-    'reports.view', 'reports.export',
-    'hr.view',
-    'users.invite',
-    'settings.view',
-    'branches.view',
+  OperationsManager: [
+    'pos.sale.read', 'pos.shift.read',
+    'inventory.item.read', 'inventory.stock.read', 'inventory.stock.approve',
+    'inventory.transfer.approve',
+    'reports.sales.read', 'reports.inventory.read',
+    'user.invite', 'branch.read',
   ],
-  'POS Staff': [
-    'pos.create',
-    'inventory.view',
-    'items.view',
-    'contacts.view',
+  HRManager: [
+    'hr.employee.read', 'hr.employee.manage',
+    'hr.schedule.read', 'hr.schedule.manage',
+    'hr.payroll.read', 'hr.payroll.manage',
+    'reports.hr.read', 'user.invite', 'branch.read',
   ],
-  'Inventory Staff': [
-    'inventory.view', 'inventory.adjust', 'inventory.transfer',
-    'items.view',
-    'reports.view',
+  FinanceManager: [
+    'finance.revenue.read', 'finance.expense.read', 'finance.expense.manage',
+    'finance.report.read', 'finance.report.export', 'finance.tax.manage',
+    'reports.finance.read', 'reports.export', 'settings.tax.manage',
   ],
-  HR: [
-    'hr.view', 'hr.manage',
-    'users.invite',
-    'reports.view',
-    'branches.view',
+  InventoryManager: [
+    'inventory.item.read', 'inventory.item.manage',
+    'inventory.stock.read', 'inventory.stock.adjust', 'inventory.stock.approve',
+    'inventory.transfer.create', 'inventory.transfer.approve',
+    'reports.inventory.read',
+  ],
+  BranchManager: [
+    'pos.sale.read', 'pos.sale.void', 'pos.shift.read',
+    'inventory.item.read', 'inventory.stock.read', 'inventory.stock.adjust',
+    'inventory.stock.approve',
+    'reports.sales.read', 'reports.inventory.read',
+    'user.invite', 'branch.read',
+    'settings.general.read', 'settings.receipt.manage',
+  ],
+  Cashier: [
+    'pos.sale.create', 'pos.sale.read',
+    'pos.discount.apply', 'pos.shift.open', 'pos.shift.close', 'pos.shift.read',
+    'inventory.item.read',
+  ],
+  Staff: [
+    'pos.sale.create', 'inventory.item.read',
+  ],
+  Viewer: [
+    'reports.sales.read', 'branch.read',
   ],
 };
 

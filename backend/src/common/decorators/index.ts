@@ -23,10 +23,17 @@ export const FirebaseUid = createParamDecorator(
 
 // ─── @Permissions ─────────────────────────────────────────────────────────────
 // Marks a route with required permission codes.
-// Usage: @Permissions('inventory.adjust', 'inventory.view')
+// Usage: @Permissions('inventory.stock.adjust', 'inventory.stock.read')
 export const Permissions = (...perms: string[]) =>
   SetMetadata('permissions', perms);
 
 // ─── @Public ──────────────────────────────────────────────────────────────────
 // Marks a route as public (skips FirebaseAuthGuard).
 export const Public = () => SetMetadata('isPublic', true);
+
+// ─── @RequireModule ───────────────────────────────────────────────────────────
+// Marks a controller or route with a required module code.
+// ModuleGuard will reject if the business has not enabled this module.
+// Usage: @RequireModule('pos') or @RequireModule('inventory')
+export const RequireModule = (moduleCode: string) =>
+  SetMetadata('requiredModule', moduleCode);

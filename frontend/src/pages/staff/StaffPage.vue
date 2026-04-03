@@ -4,7 +4,7 @@
     <div class="row items-center justify-between q-mb-md">
       <div class="text-h5 text-weight-bold">{{ t('staff.title') }}</div>
       <q-btn
-        v-if="tenantStore.hasPermission('users.invite')"
+        v-if="tenantStore.hasPermission('user.invite')"
         :label="t('staff.inviteStaff')"
         color="primary"
         unelevated
@@ -41,7 +41,7 @@
 
       <template #body-cell-actions="props">
         <q-td :props="props">
-          <template v-if="tenantStore.hasPermission('users.manage')">
+          <template v-if="tenantStore.hasPermission('user.manage')">
             <q-btn
               v-if="props.row.isActive"
               flat dense round

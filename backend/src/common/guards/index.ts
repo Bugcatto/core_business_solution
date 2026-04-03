@@ -1,6 +1,6 @@
 import {
   Injectable, CanActivate, ExecutionContext,
-  UnauthorizedException, ForbiddenException,
+  UnauthorizedException, ForbiddenException, NotFoundException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthenticatedRequest } from '../types/tenant-context.type';
@@ -56,13 +56,44 @@ export class PermissionsGuard implements CanActivate {
 
     if (isOwner) return true;
     // OR logic: user needs any ONE of the listed permissions (not all of them).
-    // This lets routes like @Permissions('items.view', 'pos.create') pass for
-    // cashiers who have pos.create but not items.view.
+    // This lets routes like @Permissions('inventory.item.read', 'pos.sale.create') pass for
+    // cashiers who have pos.sale.create but not inventory.item.read.
     if (required.some((p) => permissions.includes(p))) return true;
 
     throw new ForbiddenException(
       `Required permissions: ${required.join(', ')}`,
     );
+  }
+}
+
+// ─── ModuleGuard ──────────────────────────────────────────────────────────────
+// Checks that the business has enabled the module required by @RequireModule().
+// Applies to ALL roles — module gates are not bypassed by isOwner.
+@Injectable()
+export class ModuleGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
+  canActivate(ctx: ExecutionContext): boolean {
+    const requiredModule = this.reflector.getAllAndOverride<string>('requiredModule', [
+      ctx.getHandler(),
+      ctx.getClass(),
+    ]);
+
+    if (!requiredModule) return true;
+
+    const req = ctx.switchToHttp().getRequest<AuthenticatedRequest>();
+
+    if (!req.tenantContext) {
+      throw new UnauthorizedException('Tenant context not resolved — please re-authenticate');
+    }
+
+    const { enabledModules } = req.tenantContext;
+
+    if (!enabledModules?.includes(requiredModule)) {
+      throw new NotFoundException(`Module '${requiredModule}' is not enabled for this business`);
+    }
+
+    return true;
   }
 }
 

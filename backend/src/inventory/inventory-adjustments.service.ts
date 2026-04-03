@@ -91,7 +91,7 @@ export class InventoryAdjustmentsService {
 
   // Manager/Owner approves — applies all pending movements to inventory snapshot
   async approve(ctx: TenantContext, id: string): Promise<InventoryAdjustment> {
-    if (!ctx.isOwner && !ctx.permissions.includes('inventory.approve')) {
+    if (!ctx.isOwner && !ctx.permissions.includes('inventory.stock.approve')) {
       throw new ForbiddenException('You do not have permission to approve adjustments');
     }
 

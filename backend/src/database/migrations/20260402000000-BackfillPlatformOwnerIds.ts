@@ -14,31 +14,54 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  */
 export class BackfillPlatformOwnerIds20260402000000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // 1. Ensure a platform_owners row exists for every business owner
+    // 0. Create platform_owners table if it doesn't exist yet
+    //    (dev databases using synchronize=true may not have it if PlatformOwner
+    //     entity was missing from DatabaseModule when the app first started)
     await queryRunner.query(`
-      INSERT INTO platform_owners (id, firebase_uid, email, created_at, updated_at)
-      SELECT
-        gen_random_uuid(),
-        u.firebase_uid,
-        u.email,
-        NOW(),
-        NOW()
-      FROM businesses b
-      JOIN users u ON u.id = b.owner_user_id
-      WHERE b.platform_owner_id IS NULL
-        AND u.firebase_uid IS NOT NULL
-      ON CONFLICT (firebase_uid) DO NOTHING
+      CREATE TABLE IF NOT EXISTS "platform_owners" (
+        "id"           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "firebase_uid" VARCHAR NOT NULL UNIQUE,
+        "email"        VARCHAR NOT NULL UNIQUE,
+        "display_name" VARCHAR,
+        "created_at"   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        "updated_at"   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
     `);
 
-    // 2. Backfill platform_owner_id on businesses that still have NULL
-    await queryRunner.query(`
-      UPDATE businesses b
-      SET    platform_owner_id = po.id
-      FROM   users u
-      JOIN   platform_owners po ON po.firebase_uid = u.firebase_uid
-      WHERE  b.owner_user_id    = u.id
-        AND  b.platform_owner_id IS NULL
+    // 1 & 2. Backfill only if owner_user_id column exists on businesses
+    //        (fresh dev databases using synchronize may not have it yet — nothing to backfill)
+    const [{ exists }] = await queryRunner.query(`
+      SELECT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'businesses' AND column_name = 'owner_user_id'
+      ) AS exists
     `);
+
+    if (exists) {
+      await queryRunner.query(`
+        INSERT INTO platform_owners (id, firebase_uid, email, created_at, updated_at)
+        SELECT
+          gen_random_uuid(),
+          u.firebase_uid,
+          u.email,
+          NOW(),
+          NOW()
+        FROM businesses b
+        JOIN users u ON u.id = b.owner_user_id
+        WHERE b.platform_owner_id IS NULL
+          AND u.firebase_uid IS NOT NULL
+        ON CONFLICT (firebase_uid) DO NOTHING
+      `);
+
+      await queryRunner.query(`
+        UPDATE businesses b
+        SET    platform_owner_id = po.id
+        FROM   users u
+        JOIN   platform_owners po ON po.firebase_uid = u.firebase_uid
+        WHERE  b.owner_user_id    = u.id
+          AND  b.platform_owner_id IS NULL
+      `);
+    }
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

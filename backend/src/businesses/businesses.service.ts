@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Business } from '../database/entities/index';
+import { Business, BusinessModule } from '../database/entities/index';
 import { TenantContext } from '../common/types/tenant-context.type';
 import { UpdateBusinessDto } from './dto/index';
 
@@ -10,7 +10,19 @@ export class BusinessesService {
   constructor(
     @InjectRepository(Business)
     private readonly repo: Repository<Business>,
+    @InjectRepository(BusinessModule)
+    private readonly modulesRepo: Repository<BusinessModule>,
   ) {}
+
+  async getEnabledModules(businessId: string): Promise<string[]> {
+    const modules = await this.modulesRepo.find({
+      where: { businessId },
+      select: ['moduleCode', 'status'],
+    });
+    return modules
+      .filter((m) => m.status === 'active' || m.status === 'trial')
+      .map((m) => m.moduleCode);
+  }
 
   async findById(id: string): Promise<Business> {
     const business = await this.repo.findOne({ where: { id } });
